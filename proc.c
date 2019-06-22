@@ -91,9 +91,9 @@ found:
 
  ////////////////////////////////////////////////
 
-   p->ctime = ticks;
-   p->rtime = 0;
-   p->etime = 0;
+   p->ctime = ticks; // Initialize creation time for process
+   p->rtime = 0; // Initialize runtime to 0
+  // p->etime = 0;
 
 /////////////////////////////////////////////////////////
  
@@ -309,6 +309,7 @@ wait(void)
       }
     }
 
+
     // No point waiting if we don't have any children.
     if(!havekids || curproc->killed){
       release(&ptable.lock);
@@ -319,7 +320,58 @@ wait(void)
     sleep(curproc, &ptable.lock);  //DOC: wait-sleep
   }
 }
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+int
+getPerformanceData(int *wtime, int *rtime)
+{
+  struct proc *p;
+  int havekids, pid;
+
+  acquire(&ptable.lock);
+  for(;;){
+    // Scan through table looking for exited children.
+    havekids = 0;
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+      if(p->parent != proc)
+        continue;
+      havekids = 1;
+      if(p->state == ZOMBIE){
+        // Found one.
+        pid = p->pid;
+        kfree(p->kstack);
+        p->kstack = 0;
+        freevm(p->pgdir);
+        p->pid = 0;
+        p->parent = 0;
+        p->name[0] = 0;
+        p->killed = 0;
+        p->state = UNUSED;
+
+        *wtime = p->etime - p->ctime - p->rtime; // Waiting_time = End_time - Creation_time - Run_time
+        *rtime = p->rtime;                       // Run time
+
+        p->ctime = 0; // Reinitialising creation time of process
+        p->etime = 0; // Reinitialising end time of process
+        p->rtime = 0; // Reinitialising run time of process
+
+        release(&ptable.lock);
+        return pid;
+      }
+    }
+
+    // No point waiting if we don't have any children.
+    if(!havekids || proc->killed){
+      release(&ptable.lock);
+      return -1;
+    }
+
+    // Wait for children to exit.  (See wakeup1 call in proc_exit.)
+    sleep(proc, &ptable.lock);  //DOC: wait-sleep
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //PAGEBREAK: 42
 // Per-CPU process scheduler.
 // Each CPU calls scheduler() after setting itself up.
