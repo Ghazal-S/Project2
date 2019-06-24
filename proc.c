@@ -15,6 +15,7 @@ struct {
 static struct proc *initproc;
 
 int nextpid = 1;
+int totaltime = 0;
 extern void forkret(void);
 extern void trapret(void);
 
@@ -94,6 +95,7 @@ found:
    p->ctime = ticks; // Initialize creation time for process
    p->rtime = 0; // Initialize runtime to 0
   // p->etime = 0;
+   p->rrnum = 0;
 
 /////////////////////////////////////////////////////////
  
@@ -347,6 +349,7 @@ getPerformanceData(int *wtime, int *rtime)
         p->name[0] = 0;
         p->killed = 0;
         p->state = UNUSED;
+	totaltime += p->rtime;
 
         *wtime = p->etime - p->ctime - p->rtime; // Waiting_time = End_time - Creation_time - Run_time
         *rtime = p->rtime;                       // Run time
@@ -354,6 +357,7 @@ getPerformanceData(int *wtime, int *rtime)
         p->ctime = 0; // Reinitialising creation time of process
         p->etime = 0; // Reinitialising end time of process
         p->rtime = 0; // Reinitialising run time of process
+	p->rrnum = 0;
 
         release(&ptable.lock);
         return pid;
@@ -371,7 +375,6 @@ getPerformanceData(int *wtime, int *rtime)
   }
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //PAGEBREAK: 42
 // Per-CPU process scheduler.
 // Each CPU calls scheduler() after setting itself up.
@@ -388,20 +391,19 @@ scheduler(void)
   c->proc = 0;
   
   for(;;){
+
     // Enable interrupts on this processor.
     sti();
 
     // Loop over process table looking for process to run.
     acquire(&ptable.lock);
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-///////////////////////////////////////////////////////////////////////////////////////////////////////
-    #ifdef RR
-              if(p->state != RUNNABLE)
-                continue;
-       
-     #else
-          #ifdef FCFS
-
+#ifdef RR
+      if(p->state != RUNNABLE)
+        continue;
+#else
+#ifdef FRR
+	
             struct proc *minP = 0;
 
             if(p->state != RUNNABLE)
@@ -420,30 +422,61 @@ scheduler(void)
             }
 
             // If I found the process which I created first and it is runnable I run it
-            //(in the real FCFS I should not check if it is runnable, but for testing purposes I have to make this control, otherwise every time I launch
+            //(in the real FCFS I should not check if it is runnable, but for testing purposes I have to 		    make this control, otherwise every time I launch
             // a process which does I/0 operation (every simple command) everything will be blocked
             if(minP != 0 && minP->state == RUNNABLE)
                 p = minP;
-   #endif
-   #endif
+#else
+#ifdef GRT
+
+            struct proc *minP = 0;
+
+            if(p->state != RUNNABLE)
+              continue;
+
+            
+            if(p->pid > 1)
+            {
+              if (minP != 0){
+                
+                if(p->(rtime/(totaltime-ctime)) < minP->p->(rtime/(totaltime-ctime)))
+                  minP = p;
+              }
+              else
+                  minP = p;
+            }
+
+            
+            if(minP != 0 && minP->state == RUNNABLE)
+                p = minP;
+#else
+#ifdef 3Q
+
+
+
+
+#endif
+#endif
+#endif
+#endif
+
 if(p != 0)
-///////////////////////////////////////////////////////////////////////////////
           {
-      // Switch to chosen process.  It is the process's job
-      // to release ptable.lock and then reacquire it
-      // before jumping back to us.
-      c->proc = p;
-      switchuvm(p);
-      p->state = RUNNING;
+	      // Switch to chosen process.  It is the process's job
+	      // to release ptable.lock and then reacquire it
+	      // before jumping back to us.
+	      c->proc = p;
+	      switchuvm(p);
+	      p->state = RUNNING;
 
-      swtch(&(c->scheduler), p->context);
-      switchkvm();
+	      swtch(&(c->scheduler), p->context);
+	      switchkvm();
 
-      // Process is done running for now.
-      // It should have changed its p->state before coming back.
-      c->proc = 0;
+	      // Process is done running for now.
+	      // It should have changed its p->state before coming back.
+	      c->proc = 0;
+	}
     }
-}
     release(&ptable.lock);
 
   }
@@ -479,10 +512,23 @@ sched(void)
 void
 yield(void)
 {
-  acquire(&ptable.lock);  //DOC: yieldlock
-  myproc()->state = RUNNABLE;
-  sched();
-  release(&ptable.lock);
+#ifdef RR
+	 myproc()->rrnum++;
+	 if((myproc()->rrnum) == QUANTA) {
+	    
+		  acquire(&ptable.lock);  //DOC: yieldlock
+		  myproc()->state = RUNNABLE;
+		  sched();
+		  release(&ptable.lock);
+	 }
+#else
+	acquire(&ptable.lock);  //DOC: yieldlock
+        myproc()->state = RUNNABLE;
+	sched();
+	release(&ptable.lock);
+
+
+#endif
 }
 
 // A fork child's very first scheduling by scheduler()
