@@ -94,8 +94,9 @@ found:
 
    p->ctime = ticks; // Initialize creation time for process
    p->rtime = 0; // Initialize runtime to 0
-  // p->etime = 0;
+   p->etime = 0;
    p->rrnum = 0;
+   p->priority = 3; // default priority = 3 =high priority
 
 /////////////////////////////////////////////////////////
  
@@ -671,4 +672,27 @@ procdump(void)
     }
     cprintf("\n");
   }
+}
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+//decrease priority
+int
+decpr( int pid)
+{
+  struct proc *p;
+  
+  acquire(&ptable.lock);
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+    if(p->pid == pid ) {
+	if(p->priority == 1){
+		release(&ptable.lock);
+		return 0; 
+	}
+
+        p->priority --;
+        break;
+    }
+  }
+  release(&ptable.lock);
+
+  return 1;
 }

@@ -52,6 +52,7 @@ struct proc {
   int etime;  //exit time
   int ctime; //creation time
   int rtime; //total running time
+  int priority;                // Process priority
               
 };
 
