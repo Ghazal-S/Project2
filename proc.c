@@ -25,6 +25,11 @@ void
 pinit(void)
 {
   initlock(&ptable.lock, "ptable");
+#ifdef 3Q
+  ptable.priCount[1] = -1; // highest priority
+  ptable.priCount[2] = -1;
+  ptable.priCount[3] = -1; //lowest priority
+#endif
 }
 
 // Must be called with interrupts disabled
@@ -96,7 +101,7 @@ found:
    p->rtime = 0; // Initialize runtime to 0
    p->etime = 0;
    p->rrnum = 0;
-   p->priority = 3; // default priority = 3 =high priority
+   p->priority = 1; // default priority = 1 =highest priority
 
 /////////////////////////////////////////////////////////
  
@@ -153,7 +158,10 @@ userinit(void)
 
   safestrcpy(p->name, "initcode", sizeof(p->name));
   p->cwd = namei("/");
-
+#ifdef 3Q
+  ptable.priCount[1]++;
+  ptable.que[1][ptable.priCount[1]] = p;
+#endif
   // this assignment to p->state lets other cores
   // run this process. the acquire forces the above
   // writes to be visible, and the lock is also needed
@@ -359,6 +367,7 @@ getPerformanceData(int *wtime, int *rtime)
         p->etime = 0; // Reinitialising end time of process
         p->rtime = 0; // Reinitialising run time of process
 	p->rrnum = 0;
+	p->priority = 1;
 
         release(&ptable.lock);
         return pid;
@@ -398,89 +407,112 @@ scheduler(void)
 
     // Loop over process table looking for process to run.
     acquire(&ptable.lock);
-    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-#ifdef RR
-      if(p->state != RUNNABLE)
-        continue;
-#else
-#ifdef FRR
-	
-            struct proc *minP = 0;
-
-            if(p->state != RUNNABLE)
-              continue;
-
-            // ignore init and sh processes from FCFS
-            if(p->pid > 1)
-            {
-              if (minP != 0){
-                // here I find the process with the lowest creation time (the first one that was created)
-                if(p->ctime < minP->ctime)
-                  minP = p;
-              }
-              else
-                  minP = p;
-            }
-
-            // If I found the process which I created first and it is runnable I run it
-            //(in the real FCFS I should not check if it is runnable, but for testing purposes I have to 		    make this control, otherwise every time I launch
-            // a process which does I/0 operation (every simple command) everything will be blocked
-            if(minP != 0 && minP->state == RUNNABLE)
-                p = minP;
-#else
-#ifdef GRT
-
-            struct proc *minP = 0;
-
-            if(p->state != RUNNABLE)
-              continue;
-
-            
-            if(p->pid > 1)
-            {
-              if (minP != 0){
-                
-                if(p->(rtime/(totaltime-ctime)) < minP->p->(rtime/(totaltime-ctime)))
-                  minP = p;
-              }
-              else
-                  minP = p;
-            }
-
-            
-            if(minP != 0 && minP->state == RUNNABLE)
-                p = minP;
-#else
 #ifdef 3Q
+	int priority;
+		for(priority = 1; priority <= 3; priority++) {
+		    while(ptable.priCount[priority] > -1) {
+		        proc = ptable.que[priority][0];
+		        int i;
+		        for (i = 0; i < ptable.priCount[priority]; i++) {
+		            ptable.que[priority][i] = ptable.que[priority][i + 1];
+		        }
+		        ptable.priCount[priority]--;
+		        switchuvm(proc);
+		        proc->state = RUNNING;
+		        swtch(&cpu->scheduler, proc->context);
+		        switchkvm();
+		        proc = 0;
+		        priority = 1;
+		    }
+		}
+		release(&ptable.lock);
+	    }
 
 
+#else
+		    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+		#ifdef RR
+		      if(p->state != RUNNABLE)
+			continue;
+		#else
+		#ifdef FRR
+			
+			    struct proc *minP = 0;
 
+			    if(p->state != RUNNABLE)
+			      continue;
+
+			    // ignore init and sh processes from FCFS
+			    if(p->pid > 1)
+			    {
+			      if (minP != 0){
+				// here I find the process with the lowest creation time (the first one 				that was created)
+				if(p->ctime < minP->ctime)
+				  minP = p;
+			      }
+			      else
+				  minP = p;
+			    }
+
+			    // If I found the process which I created first and it is runnable I run it
+			    //(in the real FCFS I should not check if it is runnable, but for testing 				purposes I have to 		    make this control, otherwise every time I 				launch
+			    // a process which does I/0 operation (every simple command) everything will 				be blocked
+			    if(minP != 0 && minP->state == RUNNABLE)
+				p = minP;
+		#else
+		#ifdef GRT
+
+			    struct proc *minP = 0;
+
+			    if(p->state != RUNNABLE)
+			      continue;
+
+			    
+			    if(p->pid > 1)
+			    {
+			      if (minP != 0){
+				
+				if(p->(rtime/(totaltime-ctime)) < minP->p->(rtime/(totaltime-ctime)))
+				  minP = p;
+			      }
+			      else
+				  minP = p;
+			    }
+
+			    
+			    if(minP != 0 && minP->state == RUNNABLE)
+				p = minP;
+
+		
+			
+
+
+		#endif
+		#endif
+		#endif
+
+		if(p != 0)
+			  {
+			      // Switch to chosen process.  It is the process's job
+			      // to release ptable.lock and then reacquire it
+			      // before jumping back to us.
+			      c->proc = p;
+			      switchuvm(p);
+			      p->state = RUNNING;
+
+			      swtch(&(c->scheduler), p->context);
+			      switchkvm();
+
+			      // Process is done running for now.
+			      // It should have changed its p->state before coming back.
+			      c->proc = 0;
+			}
+		    }
+		    release(&ptable.lock);
+
+		  }
 
 #endif
-#endif
-#endif
-#endif
-
-if(p != 0)
-          {
-	      // Switch to chosen process.  It is the process's job
-	      // to release ptable.lock and then reacquire it
-	      // before jumping back to us.
-	      c->proc = p;
-	      switchuvm(p);
-	      p->state = RUNNING;
-
-	      swtch(&(c->scheduler), p->context);
-	      switchkvm();
-
-	      // Process is done running for now.
-	      // It should have changed its p->state before coming back.
-	      c->proc = 0;
-	}
-    }
-    release(&ptable.lock);
-
-  }
 }
 
 // Enter scheduler.  Must hold only ptable.lock
@@ -522,13 +554,24 @@ yield(void)
 		  sched();
 		  release(&ptable.lock);
 	 }
+
+#ifdef 3Q
+	 acquire(&ptable.lock);  //DOC: yieldlock
+  	if (proc->priority < 3)
+    		proc->priority++;
+  	ptable.priCount[proc->priority]++;
+  	ptable.que[proc->priority][ptable.priCount[proc->priority]] = proc;
+  	proc->state = RUNNABLE;
+  	sched();
+  	release(&ptable.lock);
+
 #else
 	acquire(&ptable.lock);  //DOC: yieldlock
         myproc()->state = RUNNABLE;
 	sched();
 	release(&ptable.lock);
 
-
+#endif
 #endif
 }
 
