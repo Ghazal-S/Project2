@@ -676,23 +676,18 @@ procdump(void)
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 //decrease priority
 int
-decpr( int pid)
+nice()
 {
   struct proc *p;
   
-  acquire(&ptable.lock);
-  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-    if(p->pid == pid ) {
-	if(p->priority == 1){
-		release(&ptable.lock);
+
+	if(myproc()->priority == 1){
 		return 0; 
 	}
 
-        p->priority --;
+        myproc()->priority --;
         break;
-    }
-  }
-  release(&ptable.lock);
+    
 
   return 1;
 }

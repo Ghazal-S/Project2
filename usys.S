@@ -12,6 +12,7 @@ SYSCALL(fork)
 SYSCALL(exit)
 SYSCALL(wait)
 SYSCALL(getPerformanceData) // calculates process run time and wait time
+SYSCALL(nice)
 SYSCALL(pipe)
 SYSCALL(read)
 SYSCALL(write)

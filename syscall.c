@@ -102,6 +102,7 @@ extern int sys_sleep(void);
 extern int sys_unlink(void);
 extern int sys_wait(void);
 extern int sys_getPerformanceData(void); // calculate process run time and wait time 
+extern int sys_nice(void); // decreasing the process priority
 extern int sys_write(void);
 extern int sys_uptime(void);
 
@@ -110,6 +111,7 @@ static int (*syscalls[])(void) = {
 [SYS_exit]    sys_exit,
 [SYS_wait]    sys_wait,
 [SYS_getPerformanceData]    sys_getPerformanceData,
+[SYS_nice]    sys_nice,
 [SYS_pipe]    sys_pipe,
 [SYS_read]    sys_read,
 [SYS_kill]    sys_kill,

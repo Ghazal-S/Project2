@@ -40,6 +40,23 @@ sys_getPerformanceData(void)
   return getPerformanceData(wtime, rtime);
 }
 /////////////////////////////////////////////////////////
+
+
+int
+sys_nice (void)
+{
+  return decpr();
+}
+
+/////////////////////////////////////////////////////////////////
+
+
+
+
+
+
+
+
 int
 sys_kill(void)
 {

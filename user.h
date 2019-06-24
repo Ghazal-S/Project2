@@ -6,6 +6,7 @@ int fork(void);
 int exit(void) __attribute__((noreturn));
 int wait(void);
 int getPerformanceData(int*, int*); // calculates process run time and wait time 
+int nice(void);//decreasing process priority
 int pipe(int*);
 int write(int, const void*, int);
 int read(int, void*, int);
