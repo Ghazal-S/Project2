@@ -17,22 +17,22 @@ void
 frrTest(void)
 {
  
-  int pid;
+  
   printf(1, "frrTest\n");
   for(int i=0;i<10;i++) // loop will run 10 times
     { 
         if(fork() == 0) 
         { 
-	    foo()
+	    foo();
 	    printf(1, "%d ,  ", getpid());
-            exit(0); 
+            exit(); 
         } 
     } 
-    for(int i=0;i<10;i++) // loop will run 10 times
-    wait(NULL); 
+   // for(int i=0;i<10;i++) // loop will run 10 times
+   // wait(NULL); 
       
    
-}
+
 
 }
 int

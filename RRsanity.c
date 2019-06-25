@@ -23,18 +23,18 @@ RRsanity(void)
     { 
         if(fork() == 0) 
         { 
-	    foo(getpid()) 
-            exit(0); 
+	    foo(getpid()); 
+            exit(); 
         } 
     } 
-    for(int i=0;i<10;i++) // loop will run 10 times
-    wait(NULL); 
+    //for(int i=0;i<10;i++) // loop will run 10 times
+    //wait(NULL); 
       
     getPerformanceData(&wTime,&rTime);
     printf(1, "wTime: %d rTime: %d \n",wTime,rTime);
 }
 
-}
+
 int
 main(void)
 {

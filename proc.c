@@ -25,7 +25,7 @@ void
 pinit(void)
 {
   initlock(&ptable.lock, "ptable");
-#ifdef 3Q
+#ifdef s3Q
   ptable.priCount[1] = -1; // highest priority
   ptable.priCount[2] = -1;
   ptable.priCount[3] = -1; //lowest priority
@@ -158,7 +158,7 @@ userinit(void)
 
   safestrcpy(p->name, "initcode", sizeof(p->name));
   p->cwd = namei("/");
-#ifdef 3Q
+#ifdef s3Q
   ptable.priCount[1]++;
   ptable.que[1][ptable.priCount[1]] = p;
 #endif
@@ -344,7 +344,7 @@ getPerformanceData(int *wtime, int *rtime)
     // Scan through table looking for exited children.
     havekids = 0;
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-      if(p->parent != proc)
+      if(p->parent != myproc())
         continue;
       havekids = 1;
       if(p->state == ZOMBIE){
@@ -375,13 +375,13 @@ getPerformanceData(int *wtime, int *rtime)
     }
 
     // No point waiting if we don't have any children.
-    if(!havekids || proc->killed){
+    if(!havekids || myproc()->killed){
       release(&ptable.lock);
       return -1;
     }
 
     // Wait for children to exit.  (See wakeup1 call in proc_exit.)
-    sleep(proc, &ptable.lock);  //DOC: wait-sleep
+    sleep(myproc(), &ptable.lock);  //DOC: wait-sleep
   }
 }
 
@@ -407,7 +407,7 @@ scheduler(void)
 
     // Loop over process table looking for process to run.
     acquire(&ptable.lock);
-#ifdef 3Q
+#ifdef s3Q
 	int priority;
 		for(priority = 1; priority <= 3; priority++) {
 		    while(ptable.priCount[priority] > -1) {
@@ -555,7 +555,7 @@ yield(void)
 		  release(&ptable.lock);
 	 }
 
-#ifdef 3Q
+#ifdef s3Q
 	 acquire(&ptable.lock);  //DOC: yieldlock
   	if (proc->priority < 3)
     		proc->priority++;
@@ -721,7 +721,7 @@ procdump(void)
 int
 nice()
 {
-  struct proc *p;
+//  struct proc *p;
   
 
 	if(myproc()->priority == 1){
@@ -729,7 +729,7 @@ nice()
 	}
 
         myproc()->priority --;
-        break;
+        
     
 
   return 1;

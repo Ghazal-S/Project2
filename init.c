@@ -18,6 +18,25 @@ main(void)
   }
   dup(0);  // stdout
   dup(0);  // stderr
+ #ifdef RR
+    printf(1, "Scheduler policy: round robin\n");
+  #else
+  #ifdef FRR
+    printf(1, "Scheduler policy: fifo round robin\n");
+  #else
+  #ifdef GRT
+    printf(1, "Scheduler policy: Guarnteed(Fair-Share) scheduling\n");
+  #else
+  #ifdef 3Q
+    printf(1, "Scheduler policy: Multi level queue scheduling\n");
+  
+  #endif
+  #endif
+  #endif
+  #endif
+
+
+
 
   for(;;){
     printf(1, "init: starting sh\n");

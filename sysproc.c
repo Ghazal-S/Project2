@@ -45,7 +45,7 @@ sys_getPerformanceData(void)
 int
 sys_nice (void)
 {
-  return decpr();
+  return nice();
 }
 
 /////////////////////////////////////////////////////////////////
@@ -71,6 +71,11 @@ int
 sys_getpid(void)
 {
   return myproc()->pid;
+}
+int
+sys_getppid(void)
+{
+  return myproc()->parent->pid;
 }
 
 int

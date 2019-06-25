@@ -22,6 +22,7 @@
 #define T_MCHK          18      // machine check
 #define T_SIMDERR       19      // SIMD floating point error
 
+
 // These are arbitrarily chosen, but with care not to overlap
 // processor defined exceptions or interrupt vectors.
 #define T_SYSCALL       64      // system call
@@ -35,4 +36,5 @@
 #define IRQ_IDE         14
 #define IRQ_ERROR       19
 #define IRQ_SPURIOUS    31
+
 
