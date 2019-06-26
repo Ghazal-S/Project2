@@ -27,7 +27,7 @@ main(void)
   #ifdef GRT
     printf(1, "Scheduler policy: Guarnteed(Fair-Share) scheduling\n");
   #else
-  #ifdef 3Q
+  #ifdef s3Q
     printf(1, "Scheduler policy: Multi level queue scheduling\n");
   
   #endif

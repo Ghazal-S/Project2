@@ -54,10 +54,10 @@ trap(struct trapframe *tf)
       wakeup(&ticks);
       release(&tickslock);
  // Update time fields
-      if(proc) 
+      if(myproc()) 
       {
-        if(proc->state == RUNNING)
-          proc->rtime++;
+        if(myproc()->state == RUNNING)
+          myproc()->rtime++;
       }
     }
     lapiceoi();
