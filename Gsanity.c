@@ -4,11 +4,11 @@
 #include "user.h"
 
 void
-foo(int pid)
+foo()
 {
   int i;
   for (i=0;i<50;i++){
-	printf(2, "process %d is printing for the %d time \n",pid,i);
+	printf(2, "process %d is printing for the %d time \n",getpid(),i);
   }
 
 }
@@ -16,22 +16,29 @@ foo(int pid)
 void
 Gsanity(void)
 {
+int pid;
 
   printf(1, "Gsanity\n");
-  printf(1, "Father pid is  %d \n",getppid());
+  printf(1, "Father pid is  %d \n",getpid());
   sleep(10);
 
-        if(fork() == 0) 
-        { 
-	    foo(getpid()); 
-            exit(); 
-        } 
-    else{
-	foo(getppid());
-	}
 
-
+   pid = fork ();
+    if ( pid < 0 ) {
+      printf(1, "%d failed in fork!\n", getpid());
+      exit();
+    } else if (pid == 0) {
+      // child
+      foo();
+      exit();
+    }else if (pid > 0) {
+      // parent
+      foo();
+      exit();
 }
+}
+
+
 
 
 int
