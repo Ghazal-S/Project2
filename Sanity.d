@@ -1,1 +1,1 @@
-Sanity.o: Sanity.c /usr/include/stdc-predef.h
+Sanity.o: Sanity.c /usr/include/stdc-predef.h types.h stat.h user.h
