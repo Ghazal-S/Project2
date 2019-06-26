@@ -20,26 +20,36 @@ foo(int cid)
 
 }
 
+
+
 void
 Sanity(void)
 {
   int wTime;
   int rTime;
-  printf(1, "RRsanity\n");
-  for(int i=0;i<30;i++) 
-    { 
-        if(fork() == 0) 
-        { 
-	    foo(i); 
-            exit(); 
-        } 
-    } 
-    //for(int i=0;i<30;i++) 
-    //wait(NULL); 
+  int pid,k;
+  printf(1, "Sanity\n");
+
+ 
+  for ( k = 0; k < 30; k++ ) {
+    pid = fork ();
+    if ( pid < 0 ) {
+      printf(1, "%d failed in fork!\n", getpid());
+      exit();
+    } else if (pid == 0) {
+      // child
+      foo(k);
+      exit();
+    }
+  }
+
+  for (k = 0; k < 10; k++) {
+    wait();
+  } 
       
     getPerformanceData(&wTime,&rTime);
-    printf(1, "average wTime: %d average rTime: %d \n",(wTime/30),(rTime/30));
-    printf(1, "total wTime: %d total rTime: %d \n",wTime,rTime);
+    printf(1, "Average turnaround and waiting time of all children => average wTime: %d average rTime: %d \n",(wTime/30),(rTime/30));
+    printf(1, "Turnaround and waiting time for all children => total wTime: %d total rTime: %d \n",wTime,rTime);
 }
 
 
