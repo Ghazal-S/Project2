@@ -16,18 +16,27 @@ foo()
 void
 frrTest(void)
 {
- 
+ int pid,k;
   
   printf(1, "frrTest\n");
-  for(int i=0;i<10;i++) // loop will run 10 times
-    { 
-        if(fork() == 0) 
-        { 
-	    foo();
-	    printf(1, "%d ,  ", getpid());
-            exit(); 
-        } 
-    } 
+	for ( k = 0; k < 10; k++ ) {
+	    pid = fork ();
+	    if ( pid < 0 ) {
+	      printf(1, "%d failed in fork!\n", getpid());
+	      exit();
+	    } else if (pid == 0) {
+	      // child
+	      foo();
+	      printf(1, "%d ,  ", getpid());
+	      exit();
+	    }
+	  }
+
+for (k = 0; k < 10; k++) {
+    wait();
+  }
+
+  exit();
    // for(int i=0;i<10;i++) // loop will run 10 times
    // wait(NULL); 
       
