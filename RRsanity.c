@@ -32,6 +32,7 @@ RRsanity(void)
     }
   }
 
+
   for (k = 0; k < 10; k++) {
     wait();
   }
