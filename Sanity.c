@@ -43,7 +43,7 @@ Sanity(void)
     }
   }
 
-  for (k = 0; k < 10; k++) {
+  for (k = 0; k < 30; k++) {
     wait();
   } 
       

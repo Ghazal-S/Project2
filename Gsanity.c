@@ -31,11 +31,12 @@ int pid;
       // child
       foo();
       exit();
-    }else if (pid > 0) {
+    }
+
       // parent
       foo();
       exit();
-}
+
 }
 
 

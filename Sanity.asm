@@ -104,10 +104,11 @@ main(void)
   b3:	83 c3 01             	add    $0x1,%ebx
   b6:	83 fb 1e             	cmp    $0x1e,%ebx
   b9:	75 e5                	jne    a0 <Sanity+0x20>
-  bb:	bb 0a 00 00 00       	mov    $0xa,%ebx
+  bb:	90                   	nop
+  bc:	8d 74 26 00          	lea    0x0(%esi,%eiz,1),%esi
     wait();
   c0:	e8 f5 02 00 00       	call   3ba <wait>
-  for (k = 0; k < 10; k++) {
+  for (k = 0; k < 30; k++) {
   c5:	83 eb 01             	sub    $0x1,%ebx
   c8:	75 f6                	jne    c0 <Sanity+0x40>
     getPerformanceData(&wTime,&rTime);

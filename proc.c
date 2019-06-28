@@ -474,7 +474,7 @@ scheduler(void)
 			    {
 			      if (minP != 0){
 				
-				if(p->(rtime/(totaltime-ctime)) < minP->p->(rtime/(totaltime-ctime)))
+				if( ((p->rtime)/((p->totaltime)-(p->ctime))) < ((minp->rtime)/((minp->totaltime)-(minp->ctime))) )
 				  minP = p;
 			      }
 			      else
@@ -547,15 +547,7 @@ sched(void)
 void
 yield(void)
 {
-#ifdef RR
-	 myproc()->rrnum++;
-	 if((myproc()->rrnum) == QUANTA) {
-	    
-		  acquire(&ptable.lock);  //DOC: yieldlock
-		  myproc()->state = RUNNABLE;
-		  sched();
-		  release(&ptable.lock);
-	 }
+
 
 #ifdef s3Q
 	 acquire(&ptable.lock);  //DOC: yieldlock
@@ -573,7 +565,7 @@ yield(void)
 	sched();
 	release(&ptable.lock);
 
-#endif
+
 #endif
 }
 

@@ -16,11 +16,13 @@ foo()
 void
 RRsanity(void)
 {
-  int wTime;
-  int rTime;
-  int pid,k;
+   int numberOfForks = 10;
+    int wTime[numberOfForks];
+    int rTime[numberOfForks];
+int k;
+int pid;
   printf(1, "RRsanity\n");
-  for ( k = 0; k < 10; k++ ) {
+  for ( k = 0; k < numberOfForks; k++ ) {
     pid = fork ();
     if ( pid < 0 ) {
       printf(1, "%d failed in fork!\n", getpid());
@@ -33,15 +35,14 @@ RRsanity(void)
   }
 
 
-  for (k = 0; k < 10; k++) {
-    wait();
-  }
+ // for (k = 0; k < 10; k++) {
+  //  wait();
+  //}
 
   
-      
-    getPerformanceData(&wTime,&rTime);
-    printf(1, "wTime: %d rTime: %d \n",wTime,rTime);
-    exit();
+while(wait() > 0){
+        printf(2, "PID : %d - Wait time : %d - Running time : %d - Turn Around time : %d.\n", getPerformanceData(&wTime[k], &rTime[k]), wTime[k], rTime[k], rTime[k] + wTime[k]);
+    }
 }
 
 
